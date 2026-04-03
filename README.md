@@ -56,3 +56,85 @@ projeto-datalakehouse-aws/
 ├── orquestracao/
 │   └── step_functions.json
 └── README.md
+
+Como Replicar este Projeto (Guia Passo a Passo)
+Pré-requisitos
+Conta na AWS (Nível Gratuito / Free Tier aplicável para a maioria dos serviços, cuidado com custos de Glue e Redshift).
+
+AWS CLI instalado e configurado na sua máquina local (aws configure).
+
+Python 3 instalado.
+
+Passo 1: Configuração Local
+Clone este repositório e crie um ambiente virtual para instalar as dependências do simulador.
+
+Bash
+git clone [https://github.com/SEU_USUARIO/projeto-datalakehouse-aws.git](https://github.com/SEU_USUARIO/projeto-datalakehouse-aws.git)
+cd projeto-datalakehouse-aws
+python3 -m venv .venv
+source .venv/bin/activate
+pip install boto3 pyspark
+
+Passo 2: Infraestrutura de Armazenamento e Segurança
+1.Execute o script infraestrutura/01_setup_s3.sh para criar seus buckets (Altere a variável de sufixo no arquivo para gerar nomes globalmente únicos).
+
+2.Acesse o console do AWS IAM e crie 3 Roles (Funções):
+
+Role para o Kinesis gravar no S3.
+
+Role para o Glue (com AWSGlueServiceRole e acesso de leitura/escrita no S3).
+
+Role para o Step Functions acionar o Glue e o SNS.
+
+Passo 3: Ingestão de Dados
+
+1.No console da AWS, crie um Kinesis Data Firehose do tipo Direct PUT.
+
+2.Aponte o destino para o seu bucket S3 da camada Bronze.
+
+3.Atualize a variável STREAM_NAME dentro do arquivo ingestao/02_simulador_iot.py e rode o script:
+
+Bash
+python ingestao/02_simulador_iot.py
+(Deixe o script rodando por alguns minutos para gerar volume de dados).
+
+Passo 4: Configurando os ETLs (AWS Glue)
+
+1.Vá ao AWS Glue > ETL Jobs e crie dois novos jobs do tipo Spark script editor.
+
+2.Copie e cole os códigos da pasta processamento_etl/.
+
+3.Lembre-se de alterar as URIs dos caminhos do S3 (s3://...) dentro do código para o nome dos seus buckets.
+
+4.Anexe a IAM Role do Glue criada no Passo 2.
+
+Passo 5: Orquestração e Alertas (SNS e Step Functions)
+Configurando Alertas (Amazon SNS):
+
+1.Acesse o console do Amazon SNS e crie um novo Tópico do tipo Standard (Nomeie como Alerta-DataLake).
+
+Dentro do tópico criado, clique em Create subscription (Criar inscrição).
+
+Escolha o protocolo Email e digite o seu endereço de e-mail.
+
+Passo crucial: Vá até a sua caixa de entrada de e-mail, abra a mensagem da AWS e clique em Confirm subscription.
+
+Copie o ARN do seu Tópico SNS (Ex: arn:aws:sns:us-east-1:123456789:Alerta-DataLake).
+
+2.Criando a Máquina de Estados (AWS Step Functions):
+
+Vá ao console do Step Functions e crie uma nova State Machine (Escolha o modelo em branco / Write your workflow in code).
+
+Cole o conteúdo do nosso arquivo orquestracao/step_functions.json.
+
+Substitua os ARNs genéricos no JSON pelos ARNs reais da sua conta (Os ARNs dos jobs do Glue e o ARN do Tópico SNS que você acabou de copiar).
+
+3.Criando o Gatilho (Amazon EventBridge):
+
+O agendamento para rodar o pipeline diariamente pode ser criado pelo console ou executando o nosso script via terminal:
+
+Bash
+bash infraestrutura/06_eventbridge_trigger.sh
+
+Passo 6: Execução e Consumo!
+Agora, basta iniciar a execução da sua State Machine no console do Step Functions. Você verá visualmente cada etapa (Limpeza e Agregação) ficando verde. No final, os dados processados estarão no seu bucket Gold, prontos para serem consumidos via Athena ou copiados para o Redshift usando o script da pasta data_warehouse/!
