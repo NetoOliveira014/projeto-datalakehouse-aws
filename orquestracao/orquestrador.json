@@ -1,0 +1,38 @@
+{
+  "StartAt": "ETL_Limpeza_Bronze_Silver",
+  "States": {
+    "ETL_Limpeza_Bronze_Silver": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": { "JobName": "glue_job_1_bronze_to_silver" },
+      "Next": "ETL_Negocio_Silver_Gold",
+      "Retry": [ { "ErrorEquals": ["States.ALL"], "IntervalSeconds": 10, "MaxAttempts": 2 } ],
+      "Catch": [ { "ErrorEquals": ["States.ALL"], "Next": "Falha_Pipeline" } ]
+    },
+    "ETL_Negocio_Silver_Gold": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": { "JobName": "glue_job_2_silver_to_gold" },
+      "Next": "Sucesso_Pipeline",
+      "Catch": [ { "ErrorEquals": ["States.ALL"], "Next": "Falha_Pipeline" } ]
+    },
+    "Sucesso_Pipeline": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:SUACONTA:AlertasDataLake",
+        "Message": "✅ Sucesso: O processamento diário IoT foi concluído e os dados estão na camada Gold."
+      },
+      "End": true
+    },
+    "Falha_Pipeline": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:SUACONTA:AlertasDataLake",
+        "Message": "❌ ERRO CRÍTICO: Falha no processamento do Step Functions."
+      },
+      "End": true
+    }
+  }
+}
