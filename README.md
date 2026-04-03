@@ -17,9 +17,9 @@ Se você é da área de dados ou está estudando para entrar nela, este reposit�
 1. **Origem:** Um script Python atua como simulador, gerando dados fictícios de sensores IoT (Temperatura e Umidade) em tempo real.
 2. **Ingestão (Streaming/Batch):** O Amazon Kinesis Data Firehose recebe os dados, faz o agrupamento (buffer) e entrega lotes de arquivos JSON diretamente no Data Lake.
 3. **Data Lake (S3):** Dividido em três camadas:
-   * 🥉 **Bronze:** Dados brutos (Raw) em JSON.
-   * 🥈 **Silver:** Dados limpos, filtrados e convertidos para o formato colunar Parquet (otimizado para performance e custo).
-   * 🥇 **Gold:** Dados agregados e regras de negócio aplicadas (Métricas diárias).
+   * **Bronze:** Dados brutos (Raw) em JSON.
+   * **Silver:** Dados limpos, filtrados e convertidos para o formato colunar Parquet (otimizado para performance e custo).
+   * **Gold:** Dados agregados e regras de negócio aplicadas (Métricas diárias).
 4. **Processamento (ETL):** O AWS Glue (Apache Spark) é responsável por ler os dados de uma camada, transformá-los e gravá-los na próxima.
 5. **Orquestração:** O AWS Step Functions atua como o "maestro", coordenando a ordem de execução dos scripts ETL e lidando com falhas. O gatilho diário é feito pelo Amazon EventBridge.
 6. **Notificações:** O Amazon SNS envia alertas por e-mail sobre o sucesso ou falha do pipeline.
