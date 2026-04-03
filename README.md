@@ -10,9 +10,6 @@ Se você é da área de dados ou está estudando para entrar nela, este reposit�
 
 ## Arquitetura do Projeto
 
-![Diagrama da Arquitetura](diagramas/arquitetura_aws.png)
-*(Nota: Certifique-se de que a imagem `arquitetura_aws.png` está na pasta `diagramas` do seu repositório).*
-
 ### Fluxo de Dados (Data Flow):
 1. **Origem:** Um script Python atua como simulador, gerando dados fictícios de sensores IoT (Temperatura e Umidade) em tempo real.
 2. **Ingestão (Streaming/Batch):** O Amazon Kinesis Data Firehose recebe os dados, faz o agrupamento (buffer) e entrega lotes de arquivos JSON diretamente no Data Lake.
